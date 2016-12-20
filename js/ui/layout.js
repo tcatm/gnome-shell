@@ -458,7 +458,8 @@ const LayoutManager = new Lang.Class({
         this.screenShieldGroup.set_position(0, 0);
         this.screenShieldGroup.set_size(global.screen_width, global.screen_height);
 
-        this.panelBox.set_position(this.primaryMonitor.x, this.primaryMonitor.y);
+        let y = this.primaryMonitor.y + this.primaryMonitor.height - this.panelBox.height;
+        this.panelBox.set_position(this.primaryMonitor.x, y);
         this.panelBox.set_size(this.primaryMonitor.width, -1);
 
         this.keyboardIndex = this.primaryIndex;
@@ -472,6 +473,8 @@ const LayoutManager = new Lang.Class({
             if (corner)
                 corner.setBarrierSize(size);
         });
+
+        this._updateBoxes();
     },
 
     _updatePanelBarrier: function() {
@@ -597,7 +600,7 @@ const LayoutManager = new Lang.Class({
             // right size taking struts into account.
             this._updateRegions();
         } else if (Main.sessionMode.isGreeter) {
-            this.panelBox.translation_y = -this.panelBox.height;
+            this.panelBox.translation_y = this.panelBox.height;
         } else {
             this._updateBackgrounds();
 
