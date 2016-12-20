@@ -731,8 +731,7 @@ const AggregateMenu = new Lang.Class({
         this._indicators.add_child(this._rfkill.indicators);
         this._indicators.add_child(this._volume.indicators);
         this._indicators.add_child(this._power.indicators);
-        this._indicators.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
-
+        
         this.menu.addMenuItem(this._volume.menu);
         this.menu.addMenuItem(this._brightness.menu);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
