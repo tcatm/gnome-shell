@@ -193,8 +193,6 @@ const BaseAppView = new Lang.Class({
 
     _doSpringAnimation: function(animationDirection) {
         this._grid.actor.opacity = 255;
-        this._grid.animateSpring(animationDirection,
-                                 Main.panel.getShowAppsButton());
     },
 
     animate: function(animationDirection, onComplete) {
