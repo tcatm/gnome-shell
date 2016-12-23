@@ -7,7 +7,6 @@ const Meta = imports.gi.Meta;
 const St = imports.gi.St;
 const Shell = imports.gi.Shell;
 
-const Dash = imports.ui.dash;
 const Main = imports.ui.main;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
@@ -314,83 +313,6 @@ const ThumbnailsSlider = new Lang.Class({
     }
 });
 
-const DashSlider = new Lang.Class({
-    Name: 'DashSlider',
-    Extends: SlidingControl,
-
-    _init: function(dash) {
-        this.parent({ slideDirection: SlideDirection.LEFT });
-
-        this._dash = dash;
-
-        // SlideLayout reads the actor's expand flags to decide
-        // whether to allocate the natural size to its child, or the whole
-        // available allocation
-        this._dash.actor.x_expand = true;
-
-        this.actor.x_expand = true;
-        this.actor.x_align = Clutter.ActorAlign.START;
-        this.actor.y_expand = true;
-
-        this.actor.add_actor(this._dash.actor);
-
-        this._dash.connect('icon-size-changed', Lang.bind(this, this._updateSlide));
-    },
-
-    _getSlide: function() {
-        if (this._visible || this._inDrag)
-            return 1;
-        else
-            return 0;
-    },
-
-    _onWindowDragBegin: function() {
-        this.fadeHalf();
-    },
-
-    _onWindowDragEnd: function() {
-        this.fadeIn();
-    }
-});
-
-const DashSpacer = new Lang.Class({
-    Name: 'DashSpacer',
-    Extends: St.Widget,
-
-    _init: function(params) {
-        this.parent(params);
-
-        this._bindConstraint = null;
-    },
-
-    setDashActor: function(dashActor) {
-        if (this._bindConstraint) {
-            this.remove_constraint(this._bindConstraint);
-            this._bindConstraint = null;
-        }
-
-        if (dashActor) {
-            this._bindConstraint = new Clutter.BindConstraint({ source: dashActor,
-                                                                coordinate: Clutter.BindCoordinate.SIZE });
-            this.add_constraint(this._bindConstraint);
-        }
-    },
-
-    vfunc_get_preferred_width: function(forHeight) {
-        let box = this.get_allocation_box();
-        let minWidth = this.parent(forHeight)[0];
-        let natWidth = box.x2 - box.x1;
-        return [minWidth, natWidth];
-    },
-
-    vfunc_get_preferred_height: function(forWidth) {
-        let box = this.get_allocation_box();
-        let minHeight = this.parent(forWidth)[0];
-        let natHeight = box.y2 - box.y1;
-        return [minHeight, natHeight];
-    }
-});
-
 const ControlsLayout = new Lang.Class({
     Name: 'ControlsLayout',
     Extends: Clutter.BinLayout,
@@ -426,16 +348,12 @@ const ControlsManager = new Lang.Class({
                                         x_expand: true, y_expand: true });
         this.actor.add_actor(this._group);
 
-        this.actor.add_actor(this._dashSlider.actor);
-
-        this._group.add_actor(this._dashSpacer);
         this._group.add(this.viewSelector.actor, { x_fill: true,
                                                    expand: true });
         this._group.add_actor(this._thumbnailsSlider.actor);
 
         layout.connect('allocation-changed', Lang.bind(this, this._updateWorkspacesGeometry));
 
-        Main.overview.connect('showing', Lang.bind(this, this._updateSpacerVisibility));
         Main.overview.connect('item-drag-begin', Lang.bind(this,
             function() {
                 let activePage = this.viewSelector.getActivePage();
@@ -458,15 +376,11 @@ const ControlsManager = new Lang.Class({
         let geometry = { x: x, y: y, width: width, height: height };
 
         let spacing = this.actor.get_theme_node().get_length('spacing');
-        let dashWidth = this._dashSlider.getVisibleWidth() + spacing;
         let thumbnailsWidth = this._thumbnailsSlider.getNonExpandedWidth() + spacing;
 
-        geometry.width -= dashWidth;
         geometry.width -= thumbnailsWidth;
 
-        if (this.actor.get_text_direction() == Clutter.TextDirection.LTR)
-            geometry.x += dashWidth;
-        else
+        if (this.actor.get_text_direction() != Clutter.TextDirection.LTR)
             geometry.x += thumbnailsWidth;
 
         this.viewSelector.setWorkspacesFullGeometry(geometry);
@@ -482,14 +396,7 @@ const ControlsManager = new Lang.Class({
             return;
 
         let activePage = this.viewSelector.getActivePage();
-        let dashVisible = (activePage == ViewSelector.ViewPage.WINDOWS ||
-                           activePage == ViewSelector.ViewPage.APPS);
         let thumbnailsVisible = (activePage == ViewSelector.ViewPage.WINDOWS);
-
-        if (dashVisible)
-            this._dashSlider.slideIn();
-        else
-            this._dashSlider.slideOut();
 
         if (thumbnailsVisible)
             this._thumbnailsSlider.slideIn();
@@ -497,18 +404,7 @@ const ControlsManager = new Lang.Class({
             this._thumbnailsSlider.slideOut();
     },
 
-    _updateSpacerVisibility: function() {
-        if (Main.overview.animationInProgress && !Main.overview.visibleTarget)
-            return;
-
-        let activePage = this.viewSelector.getActivePage();
-        this._dashSpacer.visible = (activePage == ViewSelector.ViewPage.WINDOWS);
-    },
-
     _onPageEmpty: function() {
-        this._dashSlider.pageEmpty();
         this._thumbnailsSlider.pageEmpty();
-
-        this._updateSpacerVisibility();
     }
 });

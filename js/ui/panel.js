@@ -17,6 +17,7 @@ const Atk = imports.gi.Atk;
 const Animation = imports.ui.animation;
 const Config = imports.misc.config;
 const CtrlAltTab = imports.ui.ctrlAltTab;
+const Dash = imports.ui.dash;
 const DND = imports.ui.dnd;
 const Overview = imports.ui.overview;
 const PopupMenu = imports.ui.popupMenu;
@@ -399,93 +400,6 @@ const AppMenuButton = new Lang.Class({
 
 Signals.addSignalMethods(AppMenuButton.prototype);
 
-const ActivitiesButton = new Lang.Class({
-    Name: 'ActivitiesButton',
-    Extends: PanelMenu.Button,
-
-    _init: function() {
-        this.parent(0.0, null, true);
-        this.actor.accessible_role = Atk.Role.TOGGLE_BUTTON;
-
-        this.actor.name = 'panelActivities';
-
-        /* Translators: If there is no suitable word for "Activities"
-           in your language, you can use the word for "Overview". */
-        this._label = new St.Label({ text: _("Activities"),
-                                     y_align: Clutter.ActorAlign.CENTER });
-        this.actor.add_actor(this._label);
-
-        this.actor.label_actor = this._label;
-
-        this.actor.connect('captured-event', Lang.bind(this, this._onCapturedEvent));
-        this.actor.connect_after('key-release-event', Lang.bind(this, this._onKeyRelease));
-
-        Main.overview.connect('showing', Lang.bind(this, function() {
-            this.actor.add_style_pseudo_class('overview');
-            this.actor.add_accessible_state (Atk.StateType.CHECKED);
-        }));
-        Main.overview.connect('hiding', Lang.bind(this, function() {
-            this.actor.remove_style_pseudo_class('overview');
-            this.actor.remove_accessible_state (Atk.StateType.CHECKED);
-        }));
-
-        this._xdndTimeOut = 0;
-    },
-
-    handleDragOver: function(source, actor, x, y, time) {
-        if (source != Main.xdndHandler)
-            return DND.DragMotionResult.CONTINUE;
-
-        if (this._xdndTimeOut != 0)
-            Mainloop.source_remove(this._xdndTimeOut);
-        this._xdndTimeOut = Mainloop.timeout_add(BUTTON_DND_ACTIVATION_TIMEOUT,
-                                                 Lang.bind(this, this._xdndToggleOverview, actor));
-        GLib.Source.set_name_by_id(this._xdndTimeOut, '[gnome-shell] this._xdndToggleOverview');
-
-        return DND.DragMotionResult.CONTINUE;
-    },
-
-    _onCapturedEvent: function(actor, event) {
-        if (event.type() == Clutter.EventType.BUTTON_PRESS ||
-            event.type() == Clutter.EventType.TOUCH_BEGIN) {
-            if (!Main.overview.shouldToggleByCornerOrButton())
-                return Clutter.EVENT_STOP;
-        }
-        return Clutter.EVENT_PROPAGATE;
-    },
-
-    _onEvent: function(actor, event) {
-        this.parent(actor, event);
-
-        if (event.type() == Clutter.EventType.TOUCH_END ||
-            event.type() == Clutter.EventType.BUTTON_RELEASE)
-            if (Main.overview.shouldToggleByCornerOrButton())
-                Main.overview.toggle();
-
-        return Clutter.EVENT_PROPAGATE;
-    },
-
-    _onKeyRelease: function(actor, event) {
-        let symbol = event.get_key_symbol();
-        if (symbol == Clutter.KEY_Return || symbol == Clutter.KEY_space) {
-            if (Main.overview.shouldToggleByCornerOrButton())
-                Main.overview.toggle();
-        }
-        return Clutter.EVENT_PROPAGATE;
-    },
-
-    _xdndToggleOverview: function(actor) {
-        let [x, y, mask] = global.get_pointer();
-        let pickedActor = global.stage.get_actor_at_pos(Clutter.PickMode.REACTIVE, x, y);
-
-        if (pickedActor == this.actor && Main.overview.shouldToggleByCornerOrButton())
-            Main.overview.toggle();
-
-        Mainloop.source_remove(this._xdndTimeOut);
-        this._xdndTimeOut = 0;
-        return GLib.SOURCE_REMOVE;
-    }
-});
 
 const PanelCorner = new Lang.Class({
     Name: 'PanelCorner',
@@ -754,7 +668,7 @@ const AggregateMenu = new Lang.Class({
 });
 
 const PANEL_ITEM_IMPLEMENTATIONS = {
-    'activities': ActivitiesButton,
+    'dash': imports.ui.dash.Dash,
     'aggregateMenu': AggregateMenu,
     'appMenu': AppMenuButton,
     'dateMenu': imports.ui.dateMenu.DateMenuButton,
@@ -940,6 +854,14 @@ const Panel = new Lang.Class({
         menu.toggle();
         if (menu.isOpen)
             menu.actor.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false);
+    },
+
+    getDashIconSize: function() {
+        return this.statusArea.dash.iconSize;
+    },
+
+    getShowAppsButton: function() {
+        return this.statusArea.dash.showAppsButton;
     },
 
     toggleAppMenu: function() {

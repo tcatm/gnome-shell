@@ -194,7 +194,7 @@ const BaseAppView = new Lang.Class({
     _doSpringAnimation: function(animationDirection) {
         this._grid.actor.opacity = 255;
         this._grid.animateSpring(animationDirection,
-                                 Main.overview.getShowAppsButton());
+                                 Main.panel.getShowAppsButton());
     },
 
     animate: function(animationDirection, onComplete) {
@@ -1776,7 +1776,7 @@ const AppIcon = new Lang.Class({
     },
 
     getDragActor: function() {
-        return this.app.create_icon_texture(Main.overview.dashIconSize);
+        return this.app.create_icon_texture(Main.panel.getDashIconSize());
     },
 
     // Returns the original actor that should align with the actor
