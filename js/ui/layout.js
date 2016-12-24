@@ -357,7 +357,7 @@ const LayoutManager = new Lang.Class({
             let cornerX = this._rtl ? monitor.x + monitor.width : monitor.x;
             let cornerY = monitor.y;
 
-            let haveTopLeftCorner = true;
+            let haveTopLeftCorner = false;
 
             if (i != this.primaryIndex) {
                 // Check if we have a top left (right for RTL) corner.
