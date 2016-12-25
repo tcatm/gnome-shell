@@ -238,9 +238,10 @@ const ViewSelector = new Lang.Class({
     },
 
     toggleApps: function() {
-        this._appsPageVisible = !this._appsPageVisible;
-        this._showPage(this._appsPageVisible ? this._appsPage : this._workspacesPage);
-        Main.overview.show();
+        if (!this._appsPageVisible)
+            this.showApps();
+        else
+            this.hideApps();
     },
 
     showApps: function() {
@@ -250,8 +251,11 @@ const ViewSelector = new Lang.Class({
     },
 
     hideApps: function () {
+        if (!this._appsPageVisible)
+            return;
+
         this._appsPageVisible = false;
-        this._showPage(this._workspacesPage);
+        Main.overview.hide();
     },
 
     show: function() {
@@ -398,10 +402,7 @@ const ViewSelector = new Lang.Class({
         if (symbol == Clutter.Escape) {
             if (this._searchActive)
                 this.reset();
-            else if (this._appsPageVisible) {
-                this._appsPageVisible = false;
-                this._showPage(this._workspacesPage);
-            } else
+            else
                 Main.overview.hide();
             return Clutter.EVENT_STOP;
         } else if (this._shouldTriggerSearch(symbol)) {
