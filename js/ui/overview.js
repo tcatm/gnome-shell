@@ -247,6 +247,7 @@ const Overview = new Lang.Class({
         // Create controls
         this._controls = new OverviewControls.ControlsManager(this._searchEntry);
         this.viewSelector = this._controls.viewSelector;
+        Main.panel.getShowAppsButton().attachViewSelector(this.viewSelector);
 
         // Add our same-line elements after the search entry
         this._overview.add(this._controls.actor, { y_fill: true, expand: true });

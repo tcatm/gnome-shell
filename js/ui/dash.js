@@ -241,7 +241,7 @@ const ShowAppsIcon = new Lang.Class({
     Name: 'ShowAppsIcon',
     Extends: DashItemContainer,
 
-    _init: function(viewSelector) {
+    _init: function() {
         this.parent();
 
         this.button = new St.Button({ style_class: 'show-apps',
@@ -254,9 +254,6 @@ const ShowAppsIcon = new Lang.Class({
                                              createIcon: Lang.bind(this, this._createIcon) });
         this.button.add_actor(this.icon.actor);
         this.button._delegate = this;
-        this.button.connect('clicked', Lang.bind(viewSelector, viewSelector.toggleApps));
-
-        viewSelector.connect('page-changed', Lang.bind(this, this._onPageChanged));
 
         this.setChild(this.button);
         this.setDragApp(null);
@@ -272,6 +269,11 @@ const ShowAppsIcon = new Lang.Class({
                                         style_class: 'show-apps-icon',
                                         track_hover: true });
         return this._iconActor;
+    },
+
+    attachViewSelector: function(viewSelector) {
+        this.button.connect('clicked', Lang.bind(viewSelector, viewSelector.toggleApps));
+        viewSelector.connect('page-changed', Lang.bind(this, this._onPageChanged));
     },
 
     _canRemoveApp: function(app) {
@@ -345,7 +347,7 @@ const DragPlaceholderItem = new Lang.Class({
 const Dash = new Lang.Class({
     Name: 'Dash',
 
-    _init : function(viewSelector) {
+    _init : function() {
         this._maxHeight = -1;
         this.iconSize = 32;
         this._shownInitially = false;
@@ -361,13 +363,13 @@ const Dash = new Lang.Class({
         this.container = new St.BoxLayout();
         this.container._delegate = this;
 
-        this._showAppsIcon = new ShowAppsIcon(viewSelector);
+        this._showAppsIcon = new ShowAppsIcon();
         this._showAppsIcon.childScale = 1;
         this._showAppsIcon.childOpacity = 1;
         this._showAppsIcon.icon.setIconSize(this.iconSize);
         this._hookUpLabel(this._showAppsIcon);
 
-        this.showAppsButton = this._showAppsIcon.button;
+        this.showAppsButton = this._showAppsIcon;
         this._offset++;
 
         this.container.insert_child_at_index(this._showAppsIcon, 0);
