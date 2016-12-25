@@ -205,7 +205,7 @@ const ViewSelector = new Lang.Class({
                               Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.NORMAL |
                               Shell.ActionMode.OVERVIEW,
-                              Lang.bind(this, this._toggleAppsPage));
+                              Lang.bind(this, this.toggleApps));
 
         Main.wm.addKeybinding('toggle-overview',
                               new Gio.Settings({ schema_id: SHELL_KEYBINDINGS_SCHEMA }),
@@ -237,7 +237,7 @@ const ViewSelector = new Lang.Class({
         global.stage.add_action(gesture);
     },
 
-    _toggleAppsPage: function() {
+    toggleApps: function() {
         this._showAppsButton.checked = !this._showAppsButton.checked;
         Main.overview.show();
     },
