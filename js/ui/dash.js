@@ -16,6 +16,7 @@ const DND = imports.ui.dnd;
 const IconGrid = imports.ui.iconGrid;
 const Main = imports.ui.main;
 const Tweener = imports.ui.tweener;
+const ViewSelector = imports.ui.viewSelector
 const Workspace = imports.ui.workspace;
 
 const DASH_ANIMATION_TIME = 0.2;
@@ -239,23 +240,29 @@ const ShowAppsIcon = new Lang.Class({
     Name: 'ShowAppsIcon',
     Extends: DashItemContainer,
 
-    _init: function() {
+    _init: function(viewSelector) {
         this.parent();
 
-        this.toggleButton = new St.Button({ style_class: 'show-apps',
+        this.button = new St.Button({ style_class: 'show-apps',
                                             track_hover: true,
-                                            can_focus: true,
-                                            toggle_mode: true });
+                                            can_focus: true });
         this._iconActor = null;
         this.icon = new IconGrid.BaseIcon(_("Show Applications"),
                                            { setSizeManually: true,
                                              showLabel: false,
                                              createIcon: Lang.bind(this, this._createIcon) });
-        this.toggleButton.add_actor(this.icon.actor);
-        this.toggleButton._delegate = this;
+        this.button.add_actor(this.icon.actor);
+        this.button._delegate = this;
+        this.button.connect('clicked', Lang.bind(viewSelector, viewSelector.toggleApps));
 
-        this.setChild(this.toggleButton);
+        viewSelector.connect('page-changed', Lang.bind(this, this._onPageChanged));
+
+        this.setChild(this.button);
         this.setDragApp(null);
+    },
+
+    _onPageChanged: function(emitter, page) {
+        this.button.checked = page == ViewSelector.ViewPage.APPS;
     },
 
     _createIcon: function(size) {
@@ -281,7 +288,7 @@ const ShowAppsIcon = new Lang.Class({
     setDragApp: function(app) {
         let canRemove = this._canRemoveApp(app);
 
-        this.toggleButton.set_hover(canRemove);
+        this.button.set_hover(canRemove);
         if (this._iconActor)
             this._iconActor.set_hover(canRemove);
 
@@ -390,7 +397,7 @@ const baseIconSizes = [ 16, 22, 24, 32, 48, 64 ];
 const Dash = new Lang.Class({
     Name: 'Dash',
 
-    _init : function() {
+    _init : function(viewSelector) {
         this._maxHeight = -1;
         this.iconSize = 64;
         this._shownInitially = false;
@@ -408,13 +415,13 @@ const Dash = new Lang.Class({
         this._box._delegate = this;
         this._container.add_actor(this._box);
 
-        this._showAppsIcon = new ShowAppsIcon();
+        this._showAppsIcon = new ShowAppsIcon(viewSelector);
         this._showAppsIcon.childScale = 1;
         this._showAppsIcon.childOpacity = 255;
         this._showAppsIcon.icon.setIconSize(this.iconSize);
         this._hookUpLabel(this._showAppsIcon);
 
-        this.showAppsButton = this._showAppsIcon.toggleButton;
+        this.showAppsButton = this._showAppsIcon.button;
 
         this._container.add_actor(this._showAppsIcon);
 

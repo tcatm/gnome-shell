@@ -121,9 +121,9 @@ const ViewSelector = new Lang.Class({
         this.actor = new Shell.Stack({ name: 'viewSelector' });
 
         this._showAppsButton = showAppsButton;
-        this._showAppsButton.connect('notify::checked', Lang.bind(this, this._onShowAppsButtonToggled));
 
         this._activePage = null;
+        this._appsPageVisible = false;
 
         this._searchActive = false;
 
@@ -238,24 +238,27 @@ const ViewSelector = new Lang.Class({
     },
 
     toggleApps: function() {
-        this._showAppsButton.checked = !this._showAppsButton.checked;
+        this._appsPageVisible = !this._appsPageVisible;
+        this._showPage(this._appsPageVisible ? this._appsPage : this._workspacesPage);
         Main.overview.show();
     },
 
     showApps: function() {
-        this._showAppsButton.checked = true;
+        this._appsPageVisible = true;
+        this._showPage(this._appsPage);
         Main.overview.show();
     },
 
     hideApps: function () {
-        this._showAppsButton.checked = false;
+        this._appsPageVisible = false;
+        this._showPage(this._workspacesPage);
     },
 
     show: function() {
         this.reset();
-        this._workspacesDisplay.show(this._showAppsButton.checked);
+        this._workspacesDisplay.show(this._appsPageVisible);
         this._activePage = null;
-        if (this._showAppsButton.checked)
+        if (this._appsPageVisible)
             this._showPage(this._appsPage);
         else
             this._showPage(this._workspacesPage);
@@ -271,7 +274,8 @@ const ViewSelector = new Lang.Class({
 
         this._workspacesDisplay.animateFromOverview(this._activePage != this._workspacesPage);
 
-        this._showAppsButton.checked = false;
+        this._appsPageVisible = false;
+        this._showPage(this._workspacesPage);
 
         if (!this._workspacesDisplay.activeWorkspaceHasMaximizedWindows())
             Main.overview.fadeInDesktop();
@@ -368,7 +372,7 @@ const ViewSelector = new Lang.Class({
 
         let oldPage = this._activePage;
         this._activePage = page;
-        this.emit('page-changed');
+        this.emit('page-changed', this.getActivePage());
 
         if (oldPage)
             this._animateOut(oldPage)
@@ -377,13 +381,9 @@ const ViewSelector = new Lang.Class({
     },
 
     _a11yFocusPage: function(page) {
-        this._showAppsButton.checked = page == this._appsPage;
+        this._appsPageVisible = page == this._appsPage;
+        this._showPage(this._appsPageVisible ? this._appsPage : this._workspacesPage);
         page.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false);
-    },
-
-    _onShowAppsButtonToggled: function() {
-        this._showPage(this._showAppsButton.checked ?
-                       this._appsPage : this._workspacesPage);
     },
 
     _onStageKeyPress: function(actor, event) {
@@ -398,9 +398,10 @@ const ViewSelector = new Lang.Class({
         if (symbol == Clutter.Escape) {
             if (this._searchActive)
                 this.reset();
-            else if (this._showAppsButton.checked)
-                this._showAppsButton.checked = false;
-            else
+            else if (this._appsPageVisible) {
+                this._appsPageVisible = false;
+                this._showPage(this._workspacesPage);
+            } else
                 Main.overview.hide();
             return Clutter.EVENT_STOP;
         } else if (this._shouldTriggerSearch(symbol)) {
@@ -418,8 +419,8 @@ const ViewSelector = new Lang.Class({
     },
 
     _searchCancelled: function() {
-        this._showPage(this._showAppsButton.checked ? this._appsPage
-                                                    : this._workspacesPage);
+        this._showPage(this._appsPageVisible ? this._appsPage
+                                             : this._workspacesPage);
 
         // Leave the entry focused when it doesn't have any text;
         // when replacing a selected search term, Clutter emits
