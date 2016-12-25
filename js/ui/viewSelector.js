@@ -247,6 +247,10 @@ const ViewSelector = new Lang.Class({
         Main.overview.show();
     },
 
+    hideApps: function () {
+        this._showAppsButton.checked = false;
+    },
+
     show: function() {
         this.reset();
         this._workspacesDisplay.show(this._showAppsButton.checked);
