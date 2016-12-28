@@ -102,7 +102,7 @@ const _modes = {
         panel: {
             left: ['dash', 'appMenu'],
             center: [],
-            right: ['a11y', 'keyboard', 'dateMenu', 'aggregateMenu']
+            right: ['a11y', 'keyboard', 'systray', 'dateMenu', 'aggregateMenu']
         }
     }
 };
