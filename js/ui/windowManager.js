@@ -24,7 +24,7 @@ const SHOW_WINDOW_ANIMATION_TIME = 0.15;
 const DIALOG_SHOW_WINDOW_ANIMATION_TIME = 0.1;
 const DESTROY_WINDOW_ANIMATION_TIME = 0.15;
 const DIALOG_DESTROY_WINDOW_ANIMATION_TIME = 0.1;
-const WINDOW_ANIMATION_TIME = 0.25;
+const WINDOW_ANIMATION_TIME = 0.2;
 const DIM_BRIGHTNESS = -0.3;
 const DIM_TIME = 0.500;
 const UNDIM_TIME = 0.250;
@@ -1708,25 +1708,36 @@ const WindowManager = new Lang.Class({
             }
         }
 
-        switchData.inGroup.set_position(-xDest, -yDest);
+        switchData.inGroup.set_position(-xDest * 0.1, -yDest * 0.1);
+        switchData.inGroup.set_opacity(0);
         switchData.inGroup.raise_top();
 
         switchData.movingWindowBin.raise_top();
 
         Tweener.addTween(switchData.outGroup,
-                         { x: xDest,
-                           y: yDest,
+                         { x: xDest * 0.05,
+                           y: yDest * 0.05,
                            time: WINDOW_ANIMATION_TIME,
-                           transition: 'easeOutQuad',
-                           onComplete: this._switchWorkspaceDone,
-                           onCompleteScope: this,
-                           onCompleteParams: [shellwm]
+                           transition: 'easeOutSine'
+                         });
+        Tweener.addTween(switchData.outGroup,
+                         { opacity: 0,
+                           time: WINDOW_ANIMATION_TIME,
+                           transition: 'easeOutQuint'
                          });
         Tweener.addTween(switchData.inGroup,
                          { x: 0,
                            y: 0,
                            time: WINDOW_ANIMATION_TIME,
-                           transition: 'easeOutQuad'
+                           transition: 'easeOutSine'
+                         });
+        Tweener.addTween(switchData.inGroup,
+                         { opacity: 255,
+                           time: WINDOW_ANIMATION_TIME,
+                           transition: 'easeOutCubic',
+                           onComplete: this._switchWorkspaceDone,
+                           onCompleteScope: this,
+                           onCompleteParams: [shellwm]
                          });
     },
 
